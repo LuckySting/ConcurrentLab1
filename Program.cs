@@ -53,21 +53,16 @@ namespace ConcurrentLab1
             }
         }
 
-        static void basicRun()
+        static void basicRun(ParameterizedThreadStart func)
         {
             var sw = Stopwatch.StartNew();
-            basicCalc(new int[] { 0, a.Length, 1});
+            func(new int[] { 0, a.Length, 1});
             sw.Stop();
-            Console.Write("Basic run basicCalc = ");
-            Console.WriteLine(sw.Elapsed.TotalMilliseconds);
-            sw.Restart();
-            increaseCalc(new int[] { 0, a.Length, 1 });
-            sw.Stop();
-            Console.Write("Basic run increaseCalc = ");
-            Console.WriteLine(sw.Elapsed.TotalMilliseconds);
+            Console.Write(sw.Elapsed.TotalMilliseconds);
+            Console.Write("; ");
         }
 
-        static void parallelRun(int m, string text, ParameterizedThreadStart func)
+        static void parallelRun(int m, ParameterizedThreadStart func)
         {
             var threads = new Thread[m];
             for (int i = 0; i < m; i++)
@@ -87,18 +82,16 @@ namespace ConcurrentLab1
                 threads[i].Join();
             }
             sw.Stop();
-            Console.Write("    ");
-            Console.Write(text);
-            Console.Write(" ");
-            Console.WriteLine(sw.Elapsed.TotalMilliseconds);
+            Console.Write(sw.Elapsed.TotalMilliseconds);
+            Console.Write("; ");
         }
 
-        static void circularRun(int m)
+        static void circularRun(int m, ParameterizedThreadStart func)
         {
             var threads = new Thread[m];
             for (int i = 0; i < m; i++)
             {
-                threads[i] = new Thread(basicCalc);
+                threads[i] = new Thread(func);
             }
             var sw = Stopwatch.StartNew();
             for (int i = 0; i < m; i++)
@@ -113,46 +106,21 @@ namespace ConcurrentLab1
                 threads[i].Join();
             }
             sw.Stop();
-            Console.Write("    Circular run basicCalc = ");
-            Console.WriteLine(sw.Elapsed.TotalMilliseconds);
-            for (int i = 0; i < m; i++)
-            {
-                threads[i] = new Thread(increaseCalc);
-            }
-            sw.Restart();
-            for (int i = 0; i < m; i++)
-            {
-                int start = i;
-                int stop = a.Length;
-                int step = m;
-                threads[i].Start(new int[] { start, stop, step });
-            }
-            for (int i = 0; i < m; i++)
-            {
-                threads[i].Join();
-            }
-            sw.Stop();
-            Console.Write("    Circular run increaseCalc = ");
-            Console.WriteLine(sw.Elapsed.TotalMilliseconds);
+            Console.Write(sw.Elapsed.TotalMilliseconds);
+            Console.Write("; ");
         }
         static void Main(string[] args)
         {
             int[] ns = { 10, 100, 1000, 100000 };
             int[] ms = { 2, 3, 4, 5, 10 };
-            foreach (var n in ns)
+            foreach (var m in ms)
             {
-                fillData(n);
-                Console.Write("N = ");
-                Console.WriteLine(n);
-                basicRun();
-                foreach (var m in ms)
+                foreach (var n in ns)
                 {
-                    Console.Write("    M = ");
-                    Console.WriteLine(m);
-                    parallelRun(m, "Parallel run basicCalc = ", basicCalc);
-                    parallelRun(m, "Parallel run increaseCalc = ", increaseCalc);
-                    circularRun(m);
+                    fillData(n);
+                    circularRun(m, increaseCalc);
                 }
+                Console.WriteLine();
             }
          
         }
